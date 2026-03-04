@@ -57,11 +57,16 @@ class TerminalActivity : AppCompatActivity() {
                 writer?.write("sh $initialScript\n")
                 writer?.flush()
 
-                var line: String?
-                while (isActive && reader.readLine().also { line = it } != null) {
-                    withContext(Dispatchers.Main) {
-                        appendOutput(line ?: "")
+                // 读取输出
+                try {
+                    while (isActive) {
+                        val line = reader.readLine() ?: break
+                        withContext(Dispatchers.Main) {
+                            appendOutput(line)
+                        }
                     }
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
                 
                 // 脚本运行结束
