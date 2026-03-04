@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AlertDialog
 import com.example.rootshell.databinding.ActivityMainBinding
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -35,7 +36,6 @@ class MainActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
             
-            // Check if name already exists
             if (prefs.contains(name)) {
                 MaterialAlertDialogBuilder(this)
                     .setTitle("覆盖确认")
@@ -55,11 +55,48 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(binding.tvGithubLink.text.toString()))
             startActivity(intent)
         }
+
+        // 串联测试按钮
+        binding.btnTestChain.setOnClickListener {
+            val savedScripts = prefs.all.keys.toTypedArray()
+            if (savedScripts.isEmpty()) {
+                Toast.makeText(this, "请先添加脚本", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val selectedItems = BooleanArray(savedScripts.size)
+            
+            AlertDialog.Builder(this)
+                .setTitle("选择要串联的脚本 (按勾选顺序)")
+                .setMultiChoiceItems(savedScripts, selectedItems) { _, which, isChecked ->
+                    selectedItems[which] = isChecked
+                }
+                .setPositiveButton("执行") { _, _ ->
+                    val pathsToRun = ArrayList<String>()
+                    savedScripts.forEachIndexed { index, name ->
+                        if (selectedItems[index]) {
+                            val path = prefs.getString(name, "") ?: ""
+                            if (path.isNotEmpty()) {
+                                pathsToRun.add(path)
+                            }
+                        }
+                    }
+                    if (pathsToRun.isNotEmpty()) {
+                        val intent = Intent(this@MainActivity, TerminalActivity::class.java)
+                        intent.putStringArrayListExtra("CHAIN_PATHS", pathsToRun)
+                        intent.putExtra("SCRIPT_NAME", "串联测试模式")
+                        startActivity(intent)
+                    } else {
+                        Toast.makeText(this@MainActivity, "请至少选择一个脚本", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                .setNegativeButton("取消", null)
+                .show()
+        }
     }
 
     private fun saveScript(name: String, path: String) {
         prefs.edit().putString(name, path).apply()
-        // Clear and reload to avoid duplicates
         binding.buttonContainer.removeAllViews()
         loadSavedScripts()
         binding.etName.text?.clear()
@@ -74,7 +111,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun createScriptCardButton(name: String, path: String) {
-        // Use MaterialButton for a modern look
         val btn = MaterialButton(this, null, com.google.android.material.R.attr.materialButtonStyle).apply {
             text = name
             val params = LinearLayout.LayoutParams(
@@ -83,7 +119,7 @@ class MainActivity : AppCompatActivity() {
             )
             params.setMargins(0, 8, 0, 8)
             layoutParams = params
-            isAllCaps = false // Disable all caps
+            isAllCaps = false
             
             setOnClickListener {
                 val intent = Intent(this@MainActivity, TerminalActivity::class.java)
@@ -93,7 +129,6 @@ class MainActivity : AppCompatActivity() {
             }
             
             setOnLongClickListener {
-                // Long press to delete
                 MaterialAlertDialogBuilder(this@MainActivity)
                     .setTitle("删除脚本")
                     .setMessage("确定要删除脚本 \"$name\" 吗？")
@@ -112,7 +147,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Reload scripts in case they were modified
         binding.buttonContainer.removeAllViews()
         loadSavedScripts()
     }
