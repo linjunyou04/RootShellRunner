@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Primary Colors -->
     <color name="primary">#6750A4</color>
+    <color name="primaryContainer">#EADDFF</color>
+    
+    <!-- Surface Colors -->
+    <color name="onBackground">#1D1B20</color>
+    <color name="surfaceVariant">#E7E0EC</color>
+    <color name="onSurfaceVariant">#49454F</color>
+    
+    <!-- Terminal Colors -->
     <color name="terminal_bg">#0C0C0C</color>
     <color name="terminal_fg">#FFFFFF</color>
 </resources>
