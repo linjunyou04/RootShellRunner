@@ -31,35 +31,6 @@ class TerminalActivity : AppCompatActivity() {
         // 设置标题
         binding.tvTerminalTitle.text = "终端 - $scriptName"
         
-        // 启动 Root Shell
-        startRootProcess()
-        
-        // 处理串联脚本或单脚本
-        lifecycleScope.launch(Dispatchers.IO) {
-            delay(500) // 等待 Root 进程启动
-            
-            if (chainPaths != null && chainPaths.isNotEmpty()) {
-                withContext(Dispatchers.Main) { 
-                    appendOutput("\n[System]: 正在串联执行 ${chainPaths.size} 个脚本...\n", "#00FFFF") 
-                }
-                chainPaths.forEachIndexed { index, path ->
-                    withContext(Dispatchers.Main) {
-                        appendOutput("[System]: 执行脚本 ${index + 1}/${chainPaths.size}: $path", "#00FFFF")
-                    }
-                    writer?.write("sh $path\n")
-                    writer?.flush()
-                }
-            } else if (scriptPath.isNotEmpty()) {
-                appendOutput("[System]: 准备执行脚本: $scriptPath", "#4CAF50")
-                writer?.write("sh $scriptPath\n")
-                writer?.flush()
-            } else {
-                withContext(Dispatchers.Main) {
-                    appendOutput("[System]: 未指定脚本，进入交互模式", "#FF9800")
-                }
-            }
-        }
-
         // 发送按钮逻辑
         binding.btnSend.setOnClickListener {
             val cmd = binding.etInput.text.toString().trim()
@@ -99,7 +70,7 @@ class TerminalActivity : AppCompatActivity() {
             
             appendOutput("\n[Macro]: 开始自动回放 ${savedMacro.size} 条记录...", "#FFDD00")
             lifecycleScope.launch(Dispatchers.IO) {
-                savedMacro.forEachIndexed { index, action ->
+                savedMacro.forEach { action ->
                     delay(action.first)
                     withContext(Dispatchers.Main) {
                         sendCommandToShell(action.second)
@@ -110,22 +81,50 @@ class TerminalActivity : AppCompatActivity() {
                 }
             }
         }
+
+        // 启动 Root Shell 并执行脚本
+        startRootProcess(scriptPath, chainPaths)
     }
 
-    private fun startRootProcess() {
+    private fun startRootProcess(scriptPath: String, chainPaths: ArrayList<String>?) {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 process = ProcessBuilder("su").redirectErrorStream(true).start()
-                writer = process!!.outputStream.bufferedWriter()
-                val reader = process!!.inputStream.bufferedReader()
+                writer = process?.outputStream?.bufferedWriter()
+                val reader = process?.inputStream?.bufferedReader()
 
                 withContext(Dispatchers.Main) {
                     appendOutput("[System]: Root 权限已获取", "#4CAF50")
                 }
 
+                // 处理串联脚本或单脚本
+                if (chainPaths != null && chainPaths.isNotEmpty()) {
+                    withContext(Dispatchers.Main) { 
+                        appendOutput("\n[System]: 正在串联执行 ${chainPaths.size} 个脚本...", "#00FFFF") 
+                    }
+                    chainPaths.forEachIndexed { index, path ->
+                        withContext(Dispatchers.Main) {
+                            appendOutput("[System]: 执行脚本 ${index + 1}/${chainPaths.size}: $path", "#00FFFF")
+                        }
+                        writer?.write("sh $path\n")
+                        writer?.flush()
+                    }
+                } else if (scriptPath.isNotEmpty()) {
+                    withContext(Dispatchers.Main) {
+                        appendOutput("[System]: 准备执行脚本: $scriptPath", "#4CAF50")
+                    }
+                    writer?.write("sh $scriptPath\n")
+                    writer?.flush()
+                } else {
+                    withContext(Dispatchers.Main) {
+                        appendOutput("[System]: 未指定脚本，进入交互模式", "#FF9800")
+                    }
+                }
+
+                // 读取输出
                 try {
                     while (isActive) {
-                        val line = reader.readLine() ?: break
+                        val line = reader?.readLine() ?: break
                         withContext(Dispatchers.Main) {
                             appendOutput(line)
                         }
@@ -143,6 +142,7 @@ class TerminalActivity : AppCompatActivity() {
                 withContext(Dispatchers.Main) { 
                     appendOutput("\n[Error]: ${e.message}", "#FF5252")
                     appendOutput("提示: 请确保设备已 Root 并授予了 Root 权限", "#FF9800")
+                    binding.tvFinishHint.visibility = View.VISIBLE
                 }
             }
         }
@@ -173,9 +173,13 @@ class TerminalActivity : AppCompatActivity() {
     }
 
     private fun appendOutput(text: String, colorHex: String = "#FFFFFF") {
-        binding.tvOutput.append(text + "\n")
-        binding.scrollView.post {
-            binding.scrollView.fullScroll(View.FOCUS_DOWN)
+        try {
+            binding.tvOutput.append(text + "\n")
+            binding.scrollView.post {
+                binding.scrollView.fullScroll(View.FOCUS_DOWN)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
