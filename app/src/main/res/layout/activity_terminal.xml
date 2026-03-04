@@ -1,32 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000"
+    android:background="@color/terminal_bg"
     tools:context=".TerminalActivity">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/terminal_bg"
+        app:titleTextColor="@color/terminal_fg"
+        app:title="终端" />
 
     <ScrollView
         android:id="@+id/scroll_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_below="@id/toolbar"
         android:layout_above="@+id/input_area"
-        android:fillViewport="true">
-
-        <HorizontalScrollView
+        android:padding="8dp">
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
             <TextView
                 android:id="@+id/tv_output"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="10dp"
-                android:textColor="#00FF00"
+                android:textColor="@color/terminal_fg"
                 android:fontFamily="monospace"
                 android:textSize="12sp"
-                android:text="正在初始化 Root 环境...\n" />
-        </HorizontalScrollView>
+                android:text="[Root 环境初始化...]\n" />
+            
+            <TextView
+                android:id="@+id/tv_finished_hint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="#22FF0000"
+                android:gravity="center"
+                android:padding="10dp"
+                android:text="--- 脚本已结束 ---"
+                android:textColor="#FF4444"
+                android:textStyle="bold"
+                android:visibility="gone" />
+        </LinearLayout>
     </ScrollView>
 
     <LinearLayout
@@ -34,30 +55,30 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:background="#222222"
+        android:background="#1A1A1A"
         android:orientation="horizontal"
-        android:padding="8dp">
-
+        android:padding="4dp">
         <EditText
             android:id="@+id/et_input"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@null"
-            android:hint="输入命令..."
-            android:textColor="#FFFFFF"
+            android:hint="输入交互命令..."
+            android:textColor="@color/terminal_fg"
             android:textColorHint="#888888"
             android:fontFamily="monospace"
             android:padding="10dp"
+            android:textSize="14sp"
             android:singleLine="true"
             android:imeOptions="actionSend" />
-
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_send"
+            style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="发送"
-            android:layout_marginStart="8dp" />
+            android:textColor="@color/primaryContainer"/>
     </LinearLayout>
 
 </RelativeLayout>

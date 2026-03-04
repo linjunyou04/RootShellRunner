@@ -1,8 +1,10 @@
 package com.example.rootshell
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.rootshell.databinding.ActivityMainBinding
@@ -10,7 +12,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-    private val prefs by lazy { getSharedPreferences("scripts_config", MODE_PRIVATE) }
+    private val prefs by lazy { getSharedPreferences("scripts_v2", MODE_PRIVATE) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,12 +25,12 @@ class MainActivity : AppCompatActivity() {
             val name = binding.etName.text.toString().trim()
             val path = binding.etPath.text.toString().trim()
             
-            if (name.isBlank()) {
+            if (name.isEmpty()) {
                 Toast.makeText(this, "请输入脚本名称", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             
-            if (path.isBlank()) {
+            if (path.isEmpty()) {
                 Toast.makeText(this, "请输入脚本路径", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
@@ -47,39 +49,49 @@ class MainActivity : AppCompatActivity() {
                 saveScript(name, path)
             }
         }
+
+        // GitHub link click
+        binding.tvGithubLink.setOnClickListener {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(binding.tvGithubLink.text.toString()))
+            startActivity(intent)
+        }
     }
 
     private fun saveScript(name: String, path: String) {
         prefs.edit().putString(name, path).apply()
-        createScriptButton(name, path)
+        // Clear and reload to avoid duplicates
+        binding.buttonContainer.removeAllViews()
+        loadSavedScripts()
         binding.etName.text?.clear()
         binding.etPath.text?.clear()
         Toast.makeText(this, "脚本已保存: $name", Toast.LENGTH_SHORT).show()
     }
 
     private fun loadSavedScripts() {
-        binding.buttonContainer.removeAllViews()
         prefs.all.forEach { (name, path) ->
-            createScriptButton(name, path.toString())
+            createScriptCardButton(name, path.toString())
         }
     }
 
-    private fun createScriptButton(name: String, path: String) {
-        // Remove existing button with same tag if any
-        val existingButton = binding.buttonContainer.findViewWithTag<Button>(name)
-        if (existingButton != null) {
-            binding.buttonContainer.removeView(existingButton)
-        }
-        
-        val btn = Button(this).apply {
+    private fun createScriptCardButton(name: String, path: String) {
+        // Use Material Tonal Button for a modern flat look
+        val btn = Button(this, null, com.google.android.material.R.attr.materialButtonTonalStyle).apply {
             text = name
-            tag = name
+            val params = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            params.setMargins(0, 8, 0, 8)
+            layoutParams = params
+            isAllCaps = false // Disable all caps
+            
             setOnClickListener {
                 val intent = Intent(this@MainActivity, TerminalActivity::class.java)
-                intent.putExtra("SCRIPT_NAME", name)
                 intent.putExtra("SCRIPT_PATH", path)
+                intent.putExtra("SCRIPT_NAME", name)
                 startActivity(intent)
             }
+            
             setOnLongClickListener {
                 // Long press to delete
                 MaterialAlertDialogBuilder(this@MainActivity)
@@ -101,6 +113,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         // Reload scripts in case they were modified
+        binding.buttonContainer.removeAllViews()
         loadSavedScripts()
     }
 }
