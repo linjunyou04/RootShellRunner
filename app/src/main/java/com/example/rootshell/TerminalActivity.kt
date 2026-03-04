@@ -18,11 +18,22 @@ class TerminalActivity : AppCompatActivity() {
         binding = ActivityTerminalBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val scriptPath = intent.getStringExtra("PATH") ?: ""
-        val scriptName = intent.getStringExtra("NAME") ?: "终端"
+        val scriptPath = intent.getStringExtra("SCRIPT_PATH") ?: ""
+        val scriptName = intent.getStringExtra("SCRIPT_NAME") ?: "终端"
         
         // 设置标题
         binding.tvTerminalTitle.text = "终端 - $scriptName"
+        
+        // 检查脚本路径
+        if (scriptPath.isEmpty()) {
+            appendOutput("[Error]: 未指定脚本路径", "#FF5252")
+            appendOutput("提示: 请返回主界面重新选择脚本", "#FF9800")
+            binding.tvFinishHint.visibility = View.VISIBLE
+            binding.layoutInputBox.alpha = 0.5f
+            return
+        }
+        
+        appendOutput("[System]: 准备执行脚本: $scriptPath", "#4CAF50")
         
         // 启动 Root Shell 并执行脚本
         startRootProcess(scriptPath)
