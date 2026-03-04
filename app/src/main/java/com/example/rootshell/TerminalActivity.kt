@@ -91,21 +91,29 @@ class TerminalActivity : AppCompatActivity() {
                 val outputScope = CoroutineScope(Dispatchers.IO)
                 
                 val stdoutJob = outputScope.launch {
-                    var line: String?
-                    while (isActive && reader.readLine().also { line = it } != null) {
-                        withContext(Dispatchers.Main) {
-                            appendOutput("$line\n")
+                    try {
+                        while (isActive) {
+                            val line = reader.readLine() ?: break
+                            withContext(Dispatchers.Main) {
+                                appendOutput("$line\n")
+                            }
                         }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
                     }
                 }
                 
                 // Read stderr
                 val stderrJob = outputScope.launch {
-                    var line: String?
-                    while (isActive && errorReader.readLine().also { line = it } != null) {
-                        withContext(Dispatchers.Main) {
-                            appendOutput("[错误] $line\n")
+                    try {
+                        while (isActive) {
+                            val line = errorReader.readLine() ?: break
+                            withContext(Dispatchers.Main) {
+                                appendOutput("[错误] $line\n")
+                            }
                         }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
                     }
                 }
                 
