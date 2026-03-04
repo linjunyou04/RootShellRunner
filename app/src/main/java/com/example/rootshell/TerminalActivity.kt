@@ -89,11 +89,16 @@ class TerminalActivity : AppCompatActivity() {
                 
                 writeToShell("sh $scriptPath")
 
-                var line: String?
-                while (isActive && reader.readLine().also { line = it } != null) {
-                    withContext(Dispatchers.Main) {
-                        appendOutput("$line\n")
+                // Read output line by line
+                try {
+                    while (isActive) {
+                        val line = reader.readLine() ?: break
+                        withContext(Dispatchers.Main) {
+                            appendOutput("$line\n")
+                        }
                     }
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
                 
                 // Script finished naturally

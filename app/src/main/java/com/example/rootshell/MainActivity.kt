@@ -3,11 +3,11 @@ package com.example.rootshell
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.rootshell.databinding.ActivityMainBinding
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 class MainActivity : AppCompatActivity() {
@@ -74,8 +74,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun createScriptCardButton(name: String, path: String) {
-        // Use Material Tonal Button for a modern flat look
-        val btn = Button(this, null, com.google.android.material.R.attr.materialButtonTonalStyle).apply {
+        // Use MaterialButton for a modern look
+        val btn = MaterialButton(this, null, com.google.android.material.R.attr.materialButtonStyle).apply {
             text = name
             val params = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
